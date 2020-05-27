@@ -24,7 +24,7 @@ while active
   else
     puts "Please enter a valid list of stock prices! Press 'q' to quit."
     user_input = gets.chomp.split(",")
-      if user_input == 'q'
+      if user_input == ['q']
         active = false
       end
   end
