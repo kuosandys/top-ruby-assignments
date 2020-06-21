@@ -133,8 +133,8 @@ class Tree
     return "The value is not in the tree"
   end
 
-  def level_order
-    queue = [@root]
+  def level_order(node=@root)
+    queue = [node]
     i = 0
     while i < queue.length
       yield queue[i] if block_given?
@@ -145,7 +145,7 @@ class Tree
     return queue.map {|node| node.data}
   end
 
-  def inorder(current_node) #left, data, right
+  def inorder(current_node=@root) #left, data, right
     array = (array)? array : []
     if !current_node
       return nil
@@ -157,7 +157,7 @@ class Tree
     return array.map {|node| node.data}
   end
 
-  def preorder(current_node) #data, left, right
+  def preorder(current_node=@root) #data, left, right
     array = (array)? array : []
     if !current_node
       return nil
@@ -169,7 +169,7 @@ class Tree
     return array.map {|node| node.data}
   end
 
-  def postorder(current_node) #left, right, data
+  def postorder(current_node=@root) #left, right, data
     array = (array)? array : []
     if !current_node
       return nil
@@ -181,9 +181,55 @@ class Tree
     return array.map {|node| node.data}
   end
   
+  def depth(node)
+    current_node = node
+    if !current_node
+      return 0
+    else
+      left_depth = self.depth(current_node.left)
+      right_depth = self.depth(current_node.right)
+    end
+    return (left_depth > right_depth)? (left_depth + 1) : (right_depth + 1)
+  end
+
+  def balanced?
+    # calculate depth of subtrees
+    left_depth = depth(@root.left)
+    right_depth = depth(@root.right)
+    return ((left_depth - right_depth).abs < 2)? true : false
+  end
+
+  def rebalance!
+    new_array = self.level_order(@root).reduce([]) {|arr, x| arr << x}
+    @root = self.build_tree(new_array.sort)
+  end
 
 end
 
-ary = [1, 7, 4, 23, 8, 9, 4, 3, 5, 7, 9, 67, 6345, 324]
-ary_2 = [4, 3, 2, 1, 6, 5, 7]
-new_tree = Tree.new(ary)
+# 1. Create a binary search tree from an array of random numbers (`Array.new(15) { rand(1..100) }`)
+ary = Array.new(15) {rand(1..100)}
+tree = Tree.new(ary)
+puts "Random array of numbers: #{ary}"
+# 2. Confirm that the tree is balanced by calling `#balanced?`
+puts "Is the tree balanced? #{tree.balanced?}"
+# 3. Print out all elements in level, pre, post, and in order
+puts "Level order #{tree.level_order}"
+puts "Preorder #{tree.preorder}"
+puts "Postorder #{tree.postorder}"
+puts "Inorder #{tree.inorder}"
+# 4. try to unbalance the tree by adding several numbers > 100
+big_nums = Array.new(5) {rand(100..1000)}
+big_nums.each {|num| tree.insert(num)}
+puts "Adding big numbers: #{big_nums}"
+# 5. Confirm that the tree is unbalanced by calling `#balanced?`
+puts "Is the tree balanced? #{tree.balanced?}"
+# 6. Balance the tree by calling `#rebalance!`
+puts "Rebalancing..."
+tree.rebalance!
+# 7. Confirm that the tree is balanced by calling `#balanced?`
+puts "Is the tree balanced? #{tree.balanced?}"
+# 8. Print out all elements in level, pre, post, and in order
+puts "Level order #{tree.level_order}"
+puts "Preorder #{tree.preorder}"
+puts "Postorder #{tree.postorder}"
+puts "Inorder #{tree.inorder}"
