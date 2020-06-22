@@ -69,7 +69,7 @@ class Tree
     current_node = @root
     parent_node = nil
 
-    # Frist find the node
+    # First find the node
     loop do
       case Node.new(value) <=> current_node
       when 1 # Greater than current node -> go right
