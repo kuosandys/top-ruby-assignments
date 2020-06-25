@@ -1,4 +1,5 @@
 class Game
+  attr_accessor :marks
 
   def initialize(player_1, player_2)
     @player_1 = player_1
@@ -51,7 +52,7 @@ class Game
     puts "-----------------------------------------\n"
   end
 
-  protected
+  # protected
 
   def take_turn(player)
     puts "#{player.name}, it's your turn!"
@@ -103,4 +104,4 @@ class Player
   end
 end
 
-Game.start
+# Game.start

@@ -22,17 +22,17 @@ def caesar_cipher(string, shift)
       new_string.concat(letter)
     end
   end
-  p new_string
+  new_string
 end
 
-puts "Please enter some text to encode: "
-string_input = gets.chomp.to_s
-puts "Please enter a shift factor for encoding (0-25): "
-shift_input = Integer gets.chomp rescue nil
+# puts "Please enter some text to encode: "
+# string_input = gets.chomp.to_s
+# puts "Please enter a shift factor for encoding (0-25): "
+# shift_input = Integer gets.chomp rescue nil
 
-while shift_input == nil || shift_input < 0 || shift_input > 25
-  puts "That's not an integer! Please enter a shift factor (0-25): "
-  shift_input = Integer gets.chomp rescue nil
-end
-puts "Your encoded message is: "
-caesar_cipher(string_input, shift_input)
+# while shift_input == nil || shift_input < 0 || shift_input > 25
+#   puts "That's not an integer! Please enter a shift factor (0-25): "
+#   shift_input = Integer gets.chomp rescue nil
+# end
+# puts "Your encoded message is: "
+# caesar_cipher(string_input, shift_input)
