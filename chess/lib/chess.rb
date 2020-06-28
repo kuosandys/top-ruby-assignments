@@ -1,10 +1,11 @@
 class Piece
-  attr_accessor :colour, :type, :symbol
+  attr_accessor :colour, :type, :symbol, :moved
 
   def initialize(colour, type)
     @colour = colour
     @type = type
     @symbol = self.get_symbol(@colour, @type)
+    @moved = false
   end
 
   def get_symbol(colour, type)
@@ -80,6 +81,7 @@ class Board
   def move_piece(old_loc, new_loc)
     game_piece = self.get(old_loc)
     @board[new_loc] = game_piece
+    game_piece.moved = true
     @board[old_loc] = nil
   end
 
@@ -94,6 +96,7 @@ class Board
 
   def add_piece(loc, colour, type)
     @board[loc] = Piece.new(colour, type)
+    return @board[loc]
   end
 end
 
@@ -125,7 +128,7 @@ class Chess
     new_loc = loop do
       print "Move to: "
       new_loc = gets.chomp.downcase
-      break new_loc if valid_move?(old_loc, new_loc, game_piece.type)
+      break new_loc if valid_move?(old_loc, new_loc, game_piece)
       puts "That's not a valid choice!"
     end
     # check move is valid for piece type
@@ -144,28 +147,35 @@ class Chess
     end
   end
 
-  def valid_move?(old_loc, new_loc, type)
+  def valid_move?(old_loc, new_loc, game_piece)
+    # Check input format
     if !self.valid_input?(old_loc)
       return false
+
+    # Check if new square is occupied. If yes, check not same team as self
+    elsif !@board.empty?(new_loc)
+      return false if @board.get(new_loc).colour == game_piece.colour
     end
 
+    # Get coords
     x = old_loc[0]
     y = old_loc[1].to_i
     new_x = new_loc[0]
     new_y = new_loc[1].to_i
 
-    case type
+    # Switch statements for each game piece type
+    case game_piece.type
     when "rook"
       # vertical movement, check spaces between are empty
       if x == new_x
-        range = (new_y > y)? (y+1...new_y).to_a : (new_y+1...y).to_a
+        range = (new_y > y)? Array(y+1...new_y) : Array(new_y+1...y)
         range.each do |num|
           return false if !@board.empty?("#{x}#{num}")
         end
         return true
       # horizontal movement, check spaces between are empty
       elsif y == new_y
-        range = (new_x > x)? (x...new_x).to_a - [x] : (new_x...x).to_a - [new_x]
+        range = (new_x > x)? Array(x...new_x) - [x] : Array(new_x...x) - [new_x]
         range.each do |num|
           return false if !@board.empty?("#{y}#{num}")
         end
@@ -173,7 +183,27 @@ class Chess
       else
         return false
       end
+    when "pawn"
+      # check if moving to an empty square or occupied square
+      if board.empty?(new_loc) # empty square
+        if x != new_x || # non-vertical movement
+          (game_piece.moved && (new_y - y == 2)) || # moving a moved piece more than 1 space
+          ((new_y - y == 2) && !@board.empty?("#{x}#{y+1}")) # jumping over a piece
+          return false
+        else
+          return true
+        end
+      else # not empty square
+        if new_y - y != 1 || Array(x..new_x).length != 2
+          return false
+        else
+          return true
+        end
+      end
     end
+    
+
+
   end
 
   def valid_input?(input)
@@ -183,6 +213,7 @@ class Chess
       return false
     end
   end
+
 end
 
 # Chess.new.play
