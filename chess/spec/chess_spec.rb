@@ -49,9 +49,11 @@ describe Board do
     it "takes another piece when the move is valid" do
       board = Board.new
       game_piece = board.add_piece("a3", "black", "rook")
+      taken_piece = board.get("a2")
       board.move_piece("a3", "a2")
       expect(board.get("a2")).to eql(game_piece)
       expect(board.empty?("a3")).to eql(true)
+      expect(board.offboard).to eql([taken_piece])
     end
 
     it "changes the @mvoed attribute of the piece after being moved" do
@@ -62,6 +64,14 @@ describe Board do
       expect(game_piece.moved).to eql(true)
     end
   end
+
+  describe "#find_king" do
+    it "returns the locatino of the king from its colour and type" do
+      board = Board.new
+      expect(board.find_king("white")).to eql("e1")
+    end
+  end
+
 end
 
 describe Chess do
@@ -88,60 +98,220 @@ describe Chess do
   end
 
   describe "#valid_move?" do
-    # ROOK
+  end
+
+  describe "#pawn_moves?" do
+    it "allows the first piece to move 2 spaces forward" do
+      chess = Chess.new
+      board = chess.board
+      expect(chess.pawn_moves?("a2", "a4", board.get("a2"))).to eql(true)
+    end
+
+    it "allows any piece to move forward 1 space" do
+      chess = Chess.new
+      board = chess.board
+      expect(chess.pawn_moves?("d2", "d3", board.get("d2"))).to eql(true)
+    end
+
+    it "does not allow any other movement" do
+      chess = Chess.new
+      board = chess.board
+      expect(chess.pawn_moves?("d2", "f5", board.get("d2"))).to eql(false)
+    end
+
+    it "takes an enemy piece diagonally" do
+      chess = Chess.new
+      board = chess.board
+      new_piece = board.add_piece("e3", "black", "rook")
+      expect(chess.pawn_moves?("d2", "e3", board.get("d2"))).to eql(true)
+      board.move_piece("d2", "e3")
+      expect(board.get("e3").type).to eql("pawn")
+    end
+
+    it "does not allow backwards movement" do
+      chess = Chess.new
+      board = chess.board
+      board.add_piece("e4", "black", "pawn")
+      expect(chess.pawn_moves?("e4", "e5", board.get("e4"))).to eql(false)
+    end
+  end
+
+  describe "#rook_moves?" do
     it "allows vertical movement" do
       chess = Chess.new
       board = chess.board
       game_piece = board.add_piece("a4", "white", "rook")
-      expect(chess.valid_move?("a4", "a6", game_piece)).to eql(true)
+      expect(chess.rook_moves?("a4", "a6")).to eql(true)
     end
 
     it "allows horizontal movement" do
       chess = Chess.new
       board = chess.board
       game_piece = board.add_piece("a4", "white", "rook")
-      expect(chess.valid_move?("a4", "c4", game_piece)).to eql(true)\
+      expect(chess.rook_moves?("a4", "c4")).to eql(true)\
     end
 
     it "does not allow any other movement" do
       chess = Chess.new
       board = chess.board
       game_piece = board.add_piece("a4", "white", "rook")
-      expect(chess.valid_move?("a4", "b6", game_piece)).to eql(false)
+      expect(chess.rook_moves?("a4", "b6")).to eql(false)
     end
 
     it "does not allow the movement if the squares in between are occupied" do
       chess = Chess.new
-      board = chess.board
-      expect(chess.valid_move?("a1", "a4", board.get("a1"))).to eql(false)
-    end
-
-    # PAWN
-    it "allows the first piece to move 2 spaces forward" do
-      chess = Chess.new
-      board = chess.board
-      expect(chess.valid_move?("a2", "a4", board.get("a2"))).to eql(true)
-    end
-
-    it "allows any piece to move forward 1 space" do
-      chess = Chess.new
-      board = chess.board
-      expect(chess.valid_move?("d2", "d3", board.get("d2"))).to eql(true)
-    end
-
-    it "does not allow any other movement" do
-      chess = Chess.new
-      board = chess.board
-      expect(chess.valid_move?("d2", "f5", board.get("d2"))).to eql(false)
-    end
-
-    it "takes an enemy pawn diagonally" do
-      chess = Chess.new
-      board = chess.board
-      new_piece = board.add_piece("e3", "black", "rook")
-      expect(chess.valid_move?("d2", "e3", board.get("d2"))).to eql(true)
-      board.move_piece("d2", "e3")
-      expect(board.get("e3").type).to eql("pawn")
+      expect(chess.rook_moves?("a1", "a4")).to eql(false)
     end
   end
+
+  describe "#bishop_moves?" do
+    it "allows diagonal movement towards top right" do
+      chess = Chess.new
+      board = chess.board
+      game_piece = board.add_piece("a3", "white", "bishop")
+      expect(chess.bishop_moves?("a3", "c5")).to eql(true)
+    end
+
+    it "allows diagonal movement towards bottom left" do
+      chess = Chess.new
+      board = chess.board
+      game_piece = board.add_piece("c5", "white", "bishop")
+      expect(chess.bishop_moves?("c5", "a3")).to eql(true)
+    end
+
+    it "allows diagonal movement towards bottom right" do
+      chess = Chess.new
+      board = chess.board
+      game_piece = board.add_piece("c5", "white", "bishop")
+      expect(chess.bishop_moves?("c5", "e3")).to eql(true)
+    end
+
+    it "allows diagonal movement towards top left" do
+      chess = Chess.new
+      board = chess.board
+      game_piece = board.add_piece("e3", "white", "bishop")
+      expect(chess.bishop_moves?("e3", "b6")).to eql(true)
+    end
+
+    it "does not allow the bishop to jump over occupied squares" do
+      chess = Chess.new
+      board = chess.board
+      expect(chess.bishop_moves?("c1", "a3")).to eql(false)
+    end
+
+    it "does not allow non-diagonal movement" do
+      chess = Chess.new
+      board = chess.board
+      game_piece = board.add_piece("a3", "white", "bishop")
+      expect(chess.bishop_moves?("a3", "b5")).to eql(false)
+    end
+  end
+
+  describe "#queen_moves?" do
+    it "can move diagonally like a bishop" do
+      chess = Chess.new
+      board = chess.board
+      game_piece = board.add_piece("a3", "black", "queen")
+      expect(chess.queen_moves?("a3", "c5")).to eql(true)
+    end
+
+    it "can move horizontally like a rook" do
+      chess = Chess.new
+      board = chess.board
+      game_piece = board.add_piece("a3", "black", "queen")
+      expect(chess.queen_moves?("a3", "d3")).to eql(true)
+    end
+
+    it "can make step-wise movement" do
+      chess = Chess.new
+      board = chess.board
+      game_piece = board.add_piece("a4", "black", "queen")
+      expect(chess.queen_moves?("a4", "a3")).to eql(true)
+    end
+
+    it "cannot make any other movement, e.g. like a knight" do
+      chess = Chess.new
+      board = chess.board
+      game_piece = board.add_piece("a3", "black", "queen")
+      expect(chess.queen_moves?("a3", "b5")).to eql(false)
+    end
+  end
+
+  describe "#knight_moves?" do
+    it "makes an L-shaped move like a knight" do
+      chess = Chess.new
+      board = chess.board
+      expect(board.get("b1").type).to eql("knight")
+      expect(chess.knight_moves?("b1", "c3")).to eql(true)
+    end
+
+    it "cannot make another kind of move, e.g. diagonal" do
+      chess = Chess.new
+      board = chess.board
+      expect(board.get("b1").type).to eql("knight")
+      expect(chess.knight_moves?("b1", "c4")).to eql(false)
+    end
+  end
+
+  describe "#king_moves" do
+    it "can move forward a square" do
+      chess = Chess.new
+      board = chess.board
+      game_piece = board.add_piece("a5", "black", "king")
+      expect(chess.king_moves?("a5", "a6", game_piece)).to eql(true)
+    end
+
+    it "can move diagonally back a square" do
+      chess = Chess.new
+      board = chess.board
+      game_piece = board.add_piece("a5", "black", "king")
+      expect(chess.king_moves?("a5", "b6", game_piece)).to eql(true)
+    end
+
+    it "cannot move more than one space at a time" do
+      chess = Chess.new
+      board = chess.board
+      game_piece = board.add_piece("b4", "black", "king")
+      expect(chess.king_moves?("b4", "b6", game_piece)).to eql(false)
+    end
+
+    it "cannot move into check" do
+      chess = Chess.new
+      board = chess.board
+      game_piece = board.add_piece("b5", "black", "king")
+      expect(chess.king_moves?("b5", "b4", game_piece)).to eql(false)
+    end
+  end
+
+  describe "#check?" do
+    it "returns true if the opponent king is in check" do
+      chess = Chess.new
+      board = chess.board
+      game_piece = board.add_piece("b4", "black", "queen")
+      king = board.add_piece("b3", "white", "king")
+      expect(chess.check?("b4", game_piece)).to eql(true)
+    end
+
+    it "returns false if the opponent king is not in check" do
+      chess = Chess.new
+      board = chess.board
+      game_piece = board.add_piece("c4", "black", "rook")
+      king = board.add_piece("b3", "white", "king")
+      expect(chess.check?("c4", game_piece)).to eql(false)
+    end
+  end
+
+  describe "#mated?" do
+    it "returns true if the player's king has no other valid moves to make to escape check" do
+      chess = Chess.new
+      board = chess.board
+      game_piece = board.add_piece("b6", "white", "queen")
+      king = board.add_piece("b4", "black", "king")
+      expect(chess.mated?("b4", king)).to eql(true)
+    end
+  end
+
+  describe "#play" do
+  end
+
 end
