@@ -50,7 +50,7 @@ class Board
     puts "\n   a b c d e f g h   \n"
     (8).downto(1).each do |x|
       row = @board.select{|k,v| k.include?("#{x}")}
-      puts "#{x}  #{row.map {|k, v| (v)? v.symbol : "x"}.join(" ")}  #{x}"
+      puts "#{x}  #{row.map {|k, v| (v)? v.symbol : "\u25A1"}.join(" ")}  #{x}"
     end
     puts "   a b c d e f g h   \n\n"
   end

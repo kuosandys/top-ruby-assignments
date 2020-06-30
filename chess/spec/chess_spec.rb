@@ -301,17 +301,4 @@ describe Chess do
     end
   end
 
-  describe "#mated?" do
-    it "returns true if the player's king has no other valid moves to make to escape check" do
-      chess = Chess.new
-      board = chess.board
-      game_piece = board.add_piece("b6", "white", "queen")
-      king = board.add_piece("b4", "black", "king")
-      expect(chess.mated?("b4", king)).to eql(true)
-    end
-  end
-
-  describe "#play" do
-  end
-
 end

@@ -21,7 +21,7 @@ class Piece
       return symbol_hash[type]
     else
       symbol_hash = {
-        "rook"=>"\u265A",
+        "rook"=>"\u265C",
         "knight"=>"\u265E",
         "bishop"=>"\u265D",
         "king"=>"\u265A",

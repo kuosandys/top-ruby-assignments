@@ -34,11 +34,9 @@ class Chess
       current_player = (@turn.odd?)? @player_w : @player_b
       puts "#{current_player.colour.upcase}'S MOVE"
 
-      # if in check, current player must move king
+      # Check if checked
       if current_player.checked
-        old_loc = @board.find_king(current_player.colour)
-        puts "Move piece: "
-        puts "You're in check, you must move the king!"
+        puts "You're in check!"
       end
 
       # Get player's choice and check validity of choice
@@ -52,18 +50,11 @@ class Chess
       # Select game piece
       game_piece = @board.get(old_loc)
 
-      # Mate?
-      if game_piece.type == "king"
-        if self.mate?(old_loc, game_piece)
-          puts "CHECKMATE!"
-        end
-      end
-
       # Get player's selection and check validity of selection
       new_loc = loop do
         print "Move to: "
         new_loc = gets.chomp.downcase
-        break new_loc if valid_move?(old_loc, new_loc, game_piece)
+        break new_loc if self.valid_move?(old_loc, new_loc, game_piece)
         puts "That's not a valid choice!"
       end
 
@@ -71,9 +62,14 @@ class Chess
       @board.move_piece(old_loc, new_loc)
       game_piece.moved = true
 
-      # If checked, remove check
+      # If checked, remove check of mated
       if current_player.checked
-        current_player.checked = false
+        if self.mated?(current_player)
+          puts ">> CHECKMATE!"
+          break
+        else
+          current_player.checked = false
+        end
       end
 
       # Check check condition
@@ -99,7 +95,7 @@ class Chess
 
   def valid_move?(old_loc, new_loc, game_piece)
     # Check input format
-    if !self.valid_input?(old_loc)
+    if !self.valid_input?(new_loc)
       return false
 
     # Check if new square is occupied. If yes, check not same team as self
@@ -144,10 +140,14 @@ class Chess
     # horizontal movement, check spaces between are empty
     elsif y == new_y
       range = (new_x > x)? Array(x...new_x) - [x] : Array(new_x...x) - [new_x]
-      range.each do |num|
-        return false if !@board.empty?("#{y}#{num}")
+      if range.length > 0
+        range.each do |letter|
+          return false if !@board.empty?("#{letter}#{y}")
+        end
+        return true
+      else
+        return true
       end
-      return true
     else
       return false
     end
@@ -178,7 +178,6 @@ class Chess
     else
       return true
     end
-    # diagonal down movement, check spaces between are empty
   end
 
   def pawn_moves?(old_loc, new_loc, game_piece)
@@ -194,8 +193,8 @@ class Chess
     if @board.empty?(new_loc) # empty square
       if x != new_x || # non-vertical movement
         (game_piece.moved && (new_y - y == 2)) || # moving a moved piece more than 1 space
-        (new_y - y > 2) # moving more than 2 spaces
-        ((new_y - y == 2) && !@board.empty?("#{x}#{y+1}")) # jumping over a piece
+        (new_y - y > 2) || # moving more than 2 spaces
+        (new_y - y).abs == 2 && !@board.empty?("#{x}#{(y+new_y)/2}") # jumping over a piece
         return false
       else
         return true
@@ -233,10 +232,11 @@ class Chess
     x_arr = (new_x > x)? (x...new_x).to_a : (new_x...x).to_a
 
     # check if only one square is moved
-    return false if !((y - new_y).abs < 2 && x_arr.length < 2)
+    if !((y - new_y).abs < 2 && x_arr.length < 2)
+      return false
+    end
 
-    # cannot move into check; check if in checked position
-    # select all opponent pieces, see if any of them can make a valid move to the king's new_loc
+    # select all opponent pieces, see if any of them can make a valid move to the king's loc
     enemy_pieces = (@board.board).select {|k,v| v && v.colour != game_piece.colour}
     enemy_pieces.each do |pos, piece|
       if self.valid_move?(pos, new_loc, piece)
@@ -247,7 +247,7 @@ class Chess
   end
 
   def check?(new_loc, game_piece)
-    opp = (game_piece.colour == "black")? @player_w : @player_w
+    opp = (game_piece.colour == "black")? @player_w : @player_b
     opp_king_pos = @board.find_king(opp.colour)
     # get the opponent king's position, and check if the game piece being moved and move to the king's position    
     if self.valid_move?(new_loc, opp_king_pos, game_piece)
@@ -259,18 +259,31 @@ class Chess
   end
 
   # Returns false if there is a valid move a king could move; else true if there is no valid move left
-  def mated?(old_loc, game_piece)
-    x, y = old_loc[0], old_loc[1].to_i
-    x_arr = ("a".."h").to_a
-    x_idx = x_arr.index(x)
-    kings_moves = ((x_arr[x_idx-1..x_idx+1]).product((y-1..y+1).to_a)).map {|arr| arr.join} - [old_loc]
-    kings_moves.each do |loc|
-      return false if self.valid_move?(old_loc, loc, game_piece)
+  # def mated?(old_loc, game_piece)
+  #   x, y = old_loc[0], old_loc[1].to_i
+  #   x_arr = ("a".."h").to_a
+  #   x_idx = x_arr.index(x)
+  #   kings_moves = ((x_arr[x_idx-1..x_idx+1]).product((y-1..y+1).to_a)).map {|arr| arr.join} - [old_loc]
+  #   kings_moves.each do |loc|
+  #     return false if self.valid_move?(old_loc, loc, game_piece)
+  #   end
+  #   return true
+  # end
+
+  # Check and mated if the player has made their move but the king is still in check
+  def mated?(current_player)
+    kings_loc = @board.find_king(current_player.colour)
+    # select all opponent pieces, see if any of them can make a valid move to the king's loc
+    enemy_pieces = (@board.board).select {|k,v| v && v.colour != current_player.colour}
+    enemy_pieces.each do |pos, piece|
+      if self.valid_move?(pos, kings_loc, piece)
+        return true
+      end
     end
-    return true
+    return false
   end
 
 end
 
-chess = Chess.new
-chess.play
+# chess = Chess.new
+# chess.play
