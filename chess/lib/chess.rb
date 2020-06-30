@@ -285,5 +285,5 @@ class Chess
 
 end
 
-# chess = Chess.new
-# chess.play
+chess = Chess.new
+chess.play
