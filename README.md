@@ -28,3 +28,5 @@ Option 2: You can create a code of your own length of choosing from the colours 
 12. Knight's Travail (knight.rb): Creates a knight on a chess board and calculates the fewest number of moves a knight needs to make to move from one square to another.
 
 13. Connect Four (/connect_four): A game of connect 4 to be played in the command line. Built with TDD (test-driven development) principals and includes rspec tests.
+
+14. Chess (/chess): A game of chess to be played in the command line. With rspec testing.
